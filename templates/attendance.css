@@ -1,0 +1,50 @@
+/* General styles */
+.container {
+    margin: 20px;
+}
+
+/* Table styles */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead {
+    background-color: #343a40;
+    color: #fff;
+}
+
+th, td {
+    padding: 8px;
+    text-align: left;
+}
+
+tbody tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+/* Button styles */
+button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* Media query for laptop screens */
+@media screen and (min-width: 768px) {
+    table {
+        font-size: 16px;
+    }
+}
+
+/* Media query for phone screens */
+@media screen and (max-width: 767px) {
+    table {
+        font-size: 14px;
+    }
+    button {
+        display: block;
+        margin: 10px auto;
+    }
+}

@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Attendance Sheet</title>
+    <style>
+        /* General styles */
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .jumbotron {
+            background-color: #ff8800;
+            color: #fff;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .container {
+            margin: 20px;
+        }
+
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 8px;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            color: #333;
+            font-weight: bold;
+            text-align: left;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        /* Button styles */
+        .action-buttons button {
+            margin-right: 5px;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .present {
+            background-color: #28a745;
+            color: #fff;
+        }
+
+        .absent {
+            background-color: #dc3545;
+            color: #fff;
+        }
+
+        .overtime {
+            background-color: #ffc107;
+            color: #000;
+        }
+
+        .weekoff {
+            background-color: #007bff;
+            color: #fff;
+        }
+
+        /* Responsive styles */
+        @media screen and (max-width: 767px) {
+            th,
+            td {
+                display: block;
+                width: 100%;
+            }
+
+            td:before {
+                content: attr(data-label);
+                font-weight: bold;
+                float: left;
+                text-transform: uppercase;
+            }
+        }
+
+        /* Hide the submitted data initially */
+        #submitted-data {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="jumbotron">
+        <h2>Attendance Sheet</h2>
+    </div>
+
+    <!-- Section to display current and available months -->
+    <div class="container">
+        <p><strong>Currently taking attendance for:</strong> May 2024</p>
+        <p><strong>Available months:</strong> May 2024, June 2024</p>
+    </div>
+
+    <div class="container">
+        <table>
+            <thead>
+                <tr>
+                    <th colspan="2">Name</th>
+                    <!-- Add columns for each date from 1 to 31 -->
+                    <script>
+                        for (let i = 1; i <= 31; i++) {
+                            document.write(`<th>${i}</th>`);
+                        }
+                    </script>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="attendance-body">
+                <!-- Rows will be dynamically added here -->
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="35" class="action-buttons">
+                        <button onclick="addRow()">Add Row</button>
+                        <button onclick="submitAttendance()">Submit Attendance</button>
+                        <button class="present" onclick="addStatus('P')">Present (P)</button>
+                        <button class="absent" onclick="addStatus('A')">Absent (A)</button>
+                        <button class="overtime" onclick="addStatus('OT')">Overtime (OT)</button>
+                        <button class="weekoff" onclick="addStatus('WO')">Weekoff (WO)</button>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <!-- Section to display submitted data -->
+    <div class="container" id="submitted-data">
+        <h2>Submitted Attendance</h2>
+        <table id="submitted-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <!-- Add columns for each date from 1 to 31 -->
+                    <script>
+                        for (let i = 1; i <= 31; i++) {
+                            document.write(`<th>${i}</th>`);
+                        }
+                    </script>
+                    <th>Total Present & Overtime</th>
+                    <th>Total Weekoff</th>
+                </tr>
+            </thead>
+            <tbody id="submitted-body">
+                <!-- Submitted data will be displayed here -->
+            </tbody>
+        </table>
+        <button onclick="downloadSubmittedData()">Download All</button>
+    </div>
+
+    <script>
+        // Function to add a new row
+        function addRow() {
+            var tableBody = document.getElementById("attendance-body");
+            var newRow = document.createElement("tr");
+            newRow.innerHTML = `
+                <td data-label="Name" colspan="2" contenteditable="true"></td>
+                <!-- Add cells for each date from 1 to 31 -->
+                ${generateDateCells()}
+                <td data-label="Actions">
+                    <button onclick="editRow(this)">Edit</button>
+                    <button onclick="deleteRow(this)">Delete</button>
+                </td>
+            `;
+            tableBody.appendChild(newRow);
+        }
+
+        // Generate date cells for each date from 1 to 31
+        function generateDateCells() {
+            var dateCells = '';
+            for (let i = 1; i <= 31; i++) {
+                dateCells += `<td data-label="${i}"></td>`;
+            }
+            return dateCells;
+        }
+
+        // Function to add status (Present, Absent, Overtime, Weekoff) to a specific date
+        function addStatus(status) {
+            var tableName = prompt("Enter the name:");
+            var selectedDate = prompt("Enter the date (1 to 31):");
+            var isValidDate = /^\d{1,2}$/.test(selectedDate);
+            if (!isValidDate) {
+                alert("Please enter a valid date (1 to 31).");
+                return;
+            }
+            selectedDate = parseInt(selectedDate);
+            if (selectedDate < 1 || selectedDate > 31) {
+                alert("Please enter a valid date (1 to 31).");
+                return;
+            }
+            var tableRows = document.querySelectorAll("#attendance-body tr");
+            var targetRow = null;
+            tableRows.forEach(function(row) {
+                var nameCell = row.querySelector("td[data-label='Name']");
+                if (nameCell && nameCell.textContent.trim() === tableName) {
+                    targetRow = row;
+                }
+            });
+            if (!targetRow) {
+                alert("Name not found in the table.");
+                return;
+            }
+            var cell = targetRow.querySelector(`td[data-label='${selectedDate}']`);
+            if (cell) {
+                cell.textContent = status;
+            }
+        }
+
+        // Function to submit attendance
+        function submitAttendance() {
+            var rows = document.querySelectorAll("#attendance-body tr");
+            var submittedDataBody = document.getElementById("submitted-body");
+
+            // Initialize totals
+            var totalPresent = 0;
+            var totalOvertime = 0;
+            var totalWeekoff = 0;
+
+            rows.forEach(function (row) {
+                var name = row.querySelector("td[data-label='Name']").innerText;
+                var dateAttendance = {};
+
+                // Retrieve attendance data for each date
+                for (let i = 1; i <= 31; i++) {
+                    var cell = row.querySelector(`td[data-label='${i}']`);
+                    var attendance = cell.textContent.trim();
+                    if (attendance !== "") {
+                        // Store attendance data for each date
+                        dateAttendance[i] = attendance;
+
+                        // Update totals
+                        if (attendance === 'P') {
+                            totalPresent++;
+                        } else if (attendance === 'OT') {
+                            totalOvertime++;
+                        } else if (attendance === 'WO') {
+                            totalWeekoff++;
+                        }
+                    }
+                }
+
+                // Create new row in submitted table
+                var newRow = document.createElement("tr");
+                newRow.innerHTML = `
+                    <td>${name}</td>
+                    <!-- Add submitted data for each date from 1 to 31 -->
+                    ${generateSubmittedDateCells(dateAttendance)}
+                    <td>${totalPresent + totalOvertime}</td>
+                    <td>${totalWeekoff}</td>
+                `;
+                submittedDataBody.appendChild(newRow);
+            });
+
+            // Show the submitted data section
+            document.getElementById("submitted-data").style.display = "block";
+        }
+
+        // Generate submitted date cells for each date from 1 to 31
+        function generateSubmittedDateCells(dateAttendance) {
+            var submittedDateCells = '';
+            for (let i = 1; i <= 31; i++) {
+                var data = dateAttendance[i];
+                submittedDateCells += `<td>${data ? data : '-'}</td>`;
+            }
+            return submittedDateCells;
+        }
+
+        // Function to download submitted data
+        function downloadSubmittedData() {
+            var submittedDataBody = document.getElementById("submitted-body");
+            var rows = submittedDataBody.querySelectorAll("tr");
+            var csvContent = "data:text/csv;charset=utf-8,";
+
+            // Get current month and year
+            var currentDate = new Date();
+            var currentMonth = currentDate.toLocaleString('default', { month: 'long' });
+            var currentYear = currentDate.getFullYear();
+
+            // Add column titles with month and year
+            var columnTitles = ["Name", "Month"];
+            for (let i = 1; i <= 31; i++) {
+                columnTitles.push(i); // Add titles for date columns
+            }
+            columnTitles.push("Total Present & Overtime", "Total Weekoff");
+            csvContent += columnTitles.join(",") + "\r\n";
+
+            // Add row data with month and year
+            rows.forEach(function(row) {
+                var rowData = [currentMonth + " " + currentYear]; // Add month and year as first column
+                row.querySelectorAll("td").forEach(function(cell, index) {
+                    // For all cells, add text content or '-'
+                    rowData.push(cell.textContent.trim() || '-');
+                });
+                csvContent += rowData.join(",") + "\r\n";
+            });
+
+            var encodedUri = encodeURI(csvContent);
+            var link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", currentMonth.toLowerCase() + "_" + currentYear + "_submitted_data.csv"); // Add month and year to file name
+            document.body.appendChild(link);
+            link.click();
+        }
+
+        // Function to edit a row
+        function editRow(button) {
+            var row = button.parentNode.parentNode;
+            // Implement edit functionality as needed
+            console.log("Edit row:", row);
+        }
+
+        // Function to delete a row
+        function deleteRow(button) {
+            var row = button.parentNode.parentNode;
+            row.parentNode.removeChild(row);
+        }
+    </script>
+</body>
+
+</html>
